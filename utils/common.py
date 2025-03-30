@@ -51,26 +51,27 @@ def vis_parsing_maps(image, segmentation_mask, save_image=False, save_path="resu
     image = np.array(image).copy().astype(np.uint8)
     segmentation_mask = segmentation_mask.copy().astype(np.uint8)
 
-    # Create a color mask
-    segmentation_mask_color = np.zeros((segmentation_mask.shape[0], segmentation_mask.shape[1], 3))
+    # Classes to include
+    included_class_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 17]
 
-    num_classes = np.max(segmentation_mask)
+    # Build binary mask for selected classes
+    mask = np.isin(segmentation_mask, included_class_indices).astype(np.uint8)
 
-    for class_index in range(1, num_classes + 1):
-        class_pixels = np.where(segmentation_mask == class_index)
-        segmentation_mask_color[class_pixels[0], class_pixels[1], :] = COLOR_LIST[class_index]
+    # Create alpha channel: 255 where mask is 1, else 0
+    alpha = (mask * 255).astype(np.uint8)
 
-    segmentation_mask_color = segmentation_mask_color.astype(np.uint8)
+    # Create RGBA image
+    rgba_image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+    rgba_image[:, :, 3] = alpha
 
-    # Convert image to BGR format for blending
-    bgr_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    # Crop to bounding box of non-transparent area
+    y_indices, x_indices = np.where(mask == 1)
+    if len(x_indices) > 0 and len(y_indices) > 0:
+        x_min, x_max = np.min(x_indices), np.max(x_indices)
+        y_min, y_max = np.min(y_indices), np.max(y_indices)
+        rgba_image = rgba_image[y_min:y_max, x_min:x_max]
 
-    # Blend the image with the segmentation mask
-    blended_image = cv2.addWeighted(bgr_image, 0.6, segmentation_mask_color, 0.4, 0)
-
-    # Save the result if required
     if save_image:
-        cv2.imwrite(save_path, segmentation_mask)
-        cv2.imwrite(save_path, blended_image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+        cv2.imwrite(save_path, cv2.cvtColor(rgba_image, cv2.COLOR_RGBA2BGRA))  # Ensure correct PNG format
 
-    return blended_image
+    return rgba_image
