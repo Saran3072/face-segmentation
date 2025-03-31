@@ -3,33 +3,21 @@ import cv2
 import numpy as np
 from PIL import Image
 import torch
-import mediapipe as mp
-from models.bisenet import BiSeNet
+
 from utils.common import vis_parsing_maps
 from inference import prepare_image, load_model
-from typing import Tuple
+from utils.app_utils import get_model_weights, resize_to_fixed_size, detect_single_face
 
-def detect_single_face(image: np.ndarray) -> bool:
-    mp_face_detection = mp.solutions.face_detection
-    with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.25) as detector:
-        results = detector.process(image)
-        return results.detections is not None and len(results.detections) == 1
-    
-# Resize both images to the same width for side-by-side layout
-def resize_to_fixed_size(img: np.ndarray, size: Tuple[int, int] = (512, 512)) -> np.ndarray:
-    """
-    Resize an image to a fixed (width, height), ignoring aspect ratio.
-    """
-    pil_img = Image.fromarray(img)
-    return np.array(pil_img.resize(size, Image.BILINEAR))
+# This will download or use cached weight from HF Hub
+get_model_weights()
 
 st.set_page_config(page_title="Face Segmentation", layout="wide")
 st.title("Face Segmentation")
 
 @st.cache_resource
 def load_bisenet_model():
-    model_name = "resnet18"
-    weight_path = "./weights/resnet18.pt"
+    model_name = "resnet34"
+    weight_path = "./weights/resnet34.pt"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     num_classes = 19
     model = load_model(model_name, num_classes, weight_path, device)
@@ -47,7 +35,7 @@ if uploaded_file:
     rgb_image = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)  # MediaPipe expects BGR
     if not detect_single_face(rgb_image):
         st.warning("Multiple or no faces detected. Please upload an image with exactly one face.")
-        st.image(image_np, caption="Input Image", use_column_width=True)
+        st.image(image_np, caption="Input Image", use_container_width=True)
     else:
         st.success("Single face detected.")
 
@@ -70,8 +58,8 @@ if uploaded_file:
 
         # Show original and result side-by-side
         col1, col2 = st.columns(2)
-        col1.image(image_np, caption="Original Image", use_column_width=True)
-        col2.image(masked_image, caption="Masked Output (PNG)", use_column_width=True)
+        col1.image(image_np, caption="Original Image", use_container_width=True)
+        col2.image(masked_image, caption="Masked Output (PNG)", use_container_width=True)
 
         # Download button
         from io import BytesIO
