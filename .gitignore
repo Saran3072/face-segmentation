@@ -1,5 +1,6 @@
 # Weight files and some folders
 *.pth
+*.pt
 *.ckpt
 *.onnx
 
