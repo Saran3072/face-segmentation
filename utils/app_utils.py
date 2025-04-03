@@ -1,4 +1,3 @@
-import mediapipe as mp
 import numpy as np
 from PIL import Image
 from typing import Tuple
@@ -21,12 +20,6 @@ def get_model_weights(repo_id="Saran30702/face_segmentation", filename="resnet34
         local_dir=cache_dir,
         local_dir_use_symlinks=False
     )
-
-def detect_single_face(image: np.ndarray) -> bool:
-    mp_face_detection = mp.solutions.face_detection
-    with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.25) as detector:
-        results = detector.process(image)
-        return results.detections is not None and len(results.detections) == 1
     
 # Resize both images to the same width for side-by-side layout
 def resize_to_fixed_size(img: np.ndarray, size: Tuple[int, int] = (512, 512)) -> np.ndarray:
