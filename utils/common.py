@@ -1,4 +1,3 @@
-import cv2
 import numpy as np
 
 
@@ -47,6 +46,7 @@ COLOR_LIST = [
 
 
 def vis_parsing_maps(image, segmentation_mask, save_image=False, save_path="result.png"):
+    import cv2
     # Create numpy arrays for image and segmentation mask
     image = np.array(image).copy().astype(np.uint8)
     segmentation_mask = segmentation_mask.copy().astype(np.uint8)
