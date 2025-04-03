@@ -62,3 +62,4 @@ typing_extensions==4.13.0
 tzdata==2025.2
 urllib3==2.3.0
 huggingface_hub
+ultralytics
